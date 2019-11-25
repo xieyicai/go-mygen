@@ -31,7 +31,7 @@ func start() {
 		DbConn.Port = c.Int("P")	//端口号
 		DbConn.Pass = c.String("p")//密码
 		DbConn.Charset =  c.String("c")//编码格式
-		if c.NArg() > 0 {
+		if c.NumFlags() > 0 {
 			dbName := c.String("d")//数据库名称
 			if dbName == "" {
 				return cli.NewExitError("数据库名称为空, 请使用 -d dbname", 9)
@@ -40,7 +40,6 @@ func start() {
 			if DbConn.Pass == "" {
 				fmt.Print("输入密码>")
 				line, _, err := bufio.NewReader(os.Stdin).ReadLine()
-				fmt.Println(string(line))
 				if err == nil {
 					DbConn.Pass = string(line)
 					Clean()//清屏
@@ -49,9 +48,6 @@ func start() {
 			if err := Commands(); err != nil {
 				return cli.NewExitError(err, 1)
 			}
-		} else {
-			fmt.Println(cli.VersionFlag)
-			fmt.Println(cli.HelpFlag)
 		}
 		return nil
 	}
@@ -76,14 +72,27 @@ func usage() {
 	app.Version = Version               //版本号
 	app.Copyright = "@Copyright 2019"   //版权保护
 	app.Usage = "快速生成操作MYSQL的CURD和文档等等" //说明
-	cli.HelpFlag = &cli.BoolFlag{       //修改系统默认
-		Name:  "help, h",
-		Usage: "显示命令帮助",
+	app.Commands = []*cli.Command{
+		{
+			Name:    "help",
+			Aliases: []string{"h", "?"},
+			Usage:   "显示帮助",
+			Action: func(c *cli.Context) error {
+				_ = cli.ShowAppHelp(c)
+				return nil
+			},
+		},
+		{
+			Name:    "version",
+			Aliases: []string{"v"},
+			Usage:   "打印版本号",
+			Action: func(c *cli.Context) error {
+				cli.ShowVersion(c)
+				return nil
+			},
+		},
 	}
-	cli.VersionFlag = &cli.BoolFlag{ //修改系统默认
-		Name:  "version, v",
-		Usage: "显示版本号",
-	}
+	app.HideHelp, app.HideVersion = true, true
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{Name: "h", Value: "localhost", Usage: "数据库地址"},
 		&cli.IntFlag{Name: "P", Value: 3306, Usage: "端口号"},

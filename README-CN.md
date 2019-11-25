@@ -12,8 +12,9 @@
 > 代码生成器,避免ORM带来的性能损耗.
 
 ## 版本
-1. 3.0.0beta版本,又一次重构
-1. 兼容linux,win,mac(本人没mac)
+1. 3.0.0beta版本 中文版本
+1. 3.1.0beta版本 英文版本
+1. 兼容linux,win,mac
 
 ## 安装
 ```
@@ -39,9 +40,11 @@ go install github.com/yezihack/go-mygen
 -p value       数据库密码 (default: "root")
 -c value       编码格式 (default: "utf8mb4")
 -d value       数据库名称
---help         显示命令帮助
---version, -v  显示版本号
 ```
+
+### 查看帮助与版本
+`go-mygen help`
+`go-mygen version`
 
 ## 使用说明
 - 首先必须先连接指定数据库

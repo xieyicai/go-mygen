@@ -13,12 +13,12 @@
 > Code generator tools with MYSQL,avoid ORM performance penalty
 
 ## version
-1. 3.0.0beta version
+1. 3.1.0beta version
 1. Compatible with linux,win,mac
 
 ## Install
 ```
-go install github.com/yezihack/go-mygen
+go get github.com/yezihack/go-mygen
 ```
 ## Using v3 releases
 > [release](https://github.com/yezihack/go-mygen/releases/tag/3.0.0beta)
@@ -40,9 +40,11 @@ go install github.com/yezihack/go-mygen
 -p value       Database password (default: "root")
 -c value       Coding format (default: "utf8mb4")
 -d value       Database name
---help         Display command help
---version, -v  Display version number
 ```
+
+### See help and version
+`go-mygen help`
+`go-mygen version`
 
 ## QuickStart
 - You must first connect to the specified database
