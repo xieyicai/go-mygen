@@ -46,7 +46,7 @@ func (c *commands) MarkDown(args []string) int {
 	CreateDir(c.l.Path)
 	err := c.l.CreateMarkdown()
 	if err != nil {
-		log.Println("MarkDown>>", err)
+		log.Println("生成Markdown>>", err)
 	}
 	return 0
 }
@@ -54,7 +54,7 @@ func (c *commands) MarkDown(args []string) int {
 //help list
 func (c *commands) Help(args []string) int {
 	for _, row := range CmdHelp {
-		s := fmt.Sprintf("%s %s\n", "NO:"+row.No, row.Msg)
+		s := fmt.Sprintf("%s %s\n", "序号:"+row.No, row.Msg)
 		fmt.Print(s)
 	}
 	return 0
@@ -70,7 +70,7 @@ func (c *commands) GenerateEntry(args []string) int {
 	}
 	err := c.l.CreateEntity(formats)
 	if err != nil {
-		log.Println("GenerateEntry>>", err.Error())
+		log.Println("生成实体>>", err.Error())
 	}
 	go Gofmt(GetExeRootDir())
 	return 0
@@ -86,7 +86,7 @@ func (c *commands) CustomFormat(args []string) int {
 func (c *commands) GenerateCURD(args []string) int {
 	err := c.l.CreateCURD(formats)
 	if err != nil {
-		log.Println("GenerateCURD>>", err.Error())
+		log.Println("生成CURD>>", err.Error())
 	}
 	go Gofmt(GetExeRootDir())
 	return 0
@@ -172,7 +172,7 @@ func (c *commands) _setFormat() []string {
 	if string(input) != "" {
 		formatList := CheckCharDoSpecialArr(string(input), ',', `[\w\,\-]+`)
 		if len(formatList) > 0 {
-			fmt.Printf("Set format success: %v\n", formatList)
+			fmt.Printf("设置格式成功: %v\n", formatList)
 			return formatList
 		}
 	}

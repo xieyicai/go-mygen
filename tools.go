@@ -188,10 +188,10 @@ func CreateDir(path string) string {
 	if t.IsDirOrFileExist(path) == false {
 		b := t.CreateDir(path)
 		if !b {
-			log.Fatalf("Directory created failed>>%s\n", path)
+			log.Fatalf("目录创建失败>>%s\n", path)
 			return ""
 		}
-		fmt.Printf("Directory created success:%s\n", path)
+		fmt.Printf("目录创建成功:%s\n", path)
 	}
 	return path
 }
@@ -199,7 +199,7 @@ func CreateDir(path string) string {
 //写文件
 func WriteFile(path, data string) (err error) {
 	if _, err := new(Tools).WriteFile(path, data); err == nil {
-		fmt.Printf("Ganerate success: %s\n", path)
+		fmt.Printf("创建文件成功: %s\n", path)
 		return nil
 	} else {
 		return errors.New(fmt.Sprintf("创建文件:%s失败", path))
@@ -209,7 +209,7 @@ func WriteFile(path, data string) (err error) {
 //追加写文件
 func WriteAppendFile(path, data string) (err error) {
 	if _, err := new(Tools).WriteFileAppend(path, data); err == nil {
-		fmt.Printf("Generate success:%s\n", path)
+		fmt.Printf("创建成功:%s\n", path)
 		return nil
 	} else {
 		return err

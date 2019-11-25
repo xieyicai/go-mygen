@@ -26,13 +26,13 @@ func start() {
 	DbConn.MaxIdleConn = 5
 	DbConn.MaxOpenConn = 10
 	app.Action = func(c *cli.Context) error {
-		DbConn.Host = c.String("h")//数据库地址
-		DbConn.Name =  c.String("u")//数据库用户名称
-		DbConn.Port = c.Int("P")	//端口号
-		DbConn.Pass = c.String("p")//密码
-		DbConn.Charset =  c.String("c")//编码格式
+		DbConn.Host = c.String("h")    //数据库地址
+		DbConn.Name = c.String("u")    //数据库用户名称
+		DbConn.Port = c.Int("P")       //端口号
+		DbConn.Pass = c.String("p")    //密码
+		DbConn.Charset = c.String("c") //编码格式
 		if c.NumFlags() > 0 {
-			dbName := c.String("d")//数据库名称
+			dbName := c.String("d") //数据库名称
 			if dbName == "" {
 				return cli.NewExitError("数据库名称为空, 请使用 -d dbname", 9)
 			}
@@ -42,7 +42,7 @@ func start() {
 				line, _, err := bufio.NewReader(os.Stdin).ReadLine()
 				if err == nil {
 					DbConn.Pass = string(line)
-					Clean()//清屏
+					Clean() //清屏
 				}
 			}
 			if err := Commands(); err != nil {
@@ -131,7 +131,7 @@ func Commands() error {
 
 	br := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print("input command>")
+		fmt.Print("输入序号>")
 		line, _, _ := br.ReadLine()
 		if len(line) == 0 {
 			continue
@@ -143,7 +143,7 @@ func Commands() error {
 				break
 			}
 		} else {
-			fmt.Println("Unknown command>>", tokens[0])
+			fmt.Println("序号不正确>>", tokens[0])
 		}
 	}
 	stop <- true

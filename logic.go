@@ -41,7 +41,7 @@ func (l *Logic) CreateEntity(formatList []string) (err error) {
 		//查询表结构信息
 		tableDesc, err := l.DB.GetTableDesc(table.Name)
 		if err != nil {
-			log.Fatal("CreateEntityErr>>", err)
+			log.Fatal("生成实体>>", err)
 			continue
 		}
 		req := new(EntityReq)
@@ -55,7 +55,7 @@ func (l *Logic) CreateEntity(formatList []string) (err error) {
 		//生成基础信息
 		err = l.GenerateDBEntity(req)
 		if err != nil {
-			log.Fatal("CreateEntityErr>>", err)
+			log.Fatal("生成实体>>", err)
 			continue
 		}
 	}
@@ -103,7 +103,7 @@ func (l *Logic) CreateCURD(formatList []string) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Println("`CURD` files created finish!")
+	fmt.Println("增删改查`CURD`文件生成完成!")
 	return nil
 }
 
@@ -124,7 +124,7 @@ func (l *Logic) CreateMarkdown() (err error) {
 		desc := new(MarkDownDataChild)
 		desc.List, err = l.DB.GetTableDesc(table.Name)
 		if err != nil {
-			log.Fatal("markdown", err)
+			log.Fatal("生成Markdown>>", err)
 			continue
 		}
 		desc.Index = i
@@ -160,12 +160,12 @@ package mysql
 	//判断文件是否存在.
 
 	if l.T.CheckFileContainsChar(path, packageStr) == false {
-		l.T.WriteFile(path, packageStr)
+		_, _ = l.T.WriteFile(path, packageStr)
 	}
 	//判断import是否加载过
 	importStr := `import "database/sql"`
 	if l.T.CheckFileContainsChar(path, importStr) == false {
-		l.T.WriteFileAppend(path, importStr)
+		_, _ = l.T.WriteFileAppend(path, importStr)
 	}
 	//声明表结构变量
 	TableData := new(TableInfo)
@@ -207,7 +207,7 @@ package mysql
 		})
 	}
 	content := bytes.NewBuffer([]byte{})
-	tpl.Execute(content, TableData)
+	_ = tpl.Execute(content, TableData)
 	//表信息写入文件
 
 	err = WriteAppendFile(path, content.String())
