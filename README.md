@@ -18,7 +18,7 @@
 
 ## 安装
 ```
-go install github.com/yezihack/go-mygen
+go get github.com/yezihack/go-mygen
 ```
 ## 下载
 > [release](https://github.com/yezihack/go-mygen/releases/tag/3.0.0beta)
