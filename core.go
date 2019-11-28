@@ -66,13 +66,13 @@ func close() {
 
 func usage() {
 	app.Name = "go-mygen" //项目名称
-	app.Authors = []*cli.Author{
+	app.Authors = []cli.Author{
 		{"百里", "sgfoot2020@gmail.com"},
 	}
 	app.Version = Version               //版本号
 	app.Copyright = "@Copyright 2019"   //版权保护
 	app.Usage = "快速生成操作MYSQL的CURD和文档等等" //说明
-	app.Commands = []*cli.Command{
+	app.Commands = []cli.Command{
 		{
 			Name:    "help",
 			Aliases: []string{"h", "?"},
