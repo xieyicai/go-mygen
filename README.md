@@ -8,6 +8,8 @@
 ![](https://img.shields.io/github/license/yezihack/go-mygen)
 
 [英文](README-EN.md)|[中文](README.md)
+
+![](assets/img/go-mygen.png)
 # go-mygen
 > 代码生成器,避免ORM带来的性能损耗.
 
