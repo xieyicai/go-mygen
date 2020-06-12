@@ -1,0 +1,501 @@
+{
+        "TableName": "sys_group",
+        "PrimaryKey": "id",
+        "PrimaryType": "string",
+        "StructTableName": "SysGroup",
+        "NullStructTableName": "SysGroupNull",
+        "PkgEntity": "entity.",
+        "PkgTable": "config.",
+        "UpperTableName": "TABLE_SYS_GROUP",
+        "AllFieldList": "`id`,`name`,`parent_id`,`level`,`parent_ids`,`sort`,`create_by`,`create_date`,`update_by`,`update_date`,`remarks`,`del_flag`,`tel`,`address`,`short_name`,`group_type`,`province`,`city`,`county`,`leader`",
+        "InsertFieldList": "name,parent_id,level,parent_ids,sort,create_by,create_date,update_by,update_date,remarks,del_flag,tel,address,short_name,group_type,province,city,county,leader",
+        "InsertMark": "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?",
+        "UpdateFieldList": "name=?,parent_id=?,level=?,parent_ids=?,sort=?,create_by=?,create_date=?,update_by=?,update_date=?,remarks=?,del_flag=?,tel=?,address=?,short_name=?,group_type=?,province=?,city=?,county=?,leader=?",
+        "UpdateListField": [
+                "value.Name",
+                "value.ParentId",
+                "value.Level",
+                "value.ParentIds",
+                "value.Sort",
+                "value.CreateBy",
+                "value.CreateDate",
+                "value.UpdateBy",
+                "value.UpdateDate",
+                "value.Remarks",
+                "value.DelFlag",
+                "value.Tel",
+                "value.Address",
+                "value.ShortName",
+                "value.GroupType",
+                "value.Province",
+                "value.City",
+                "value.County",
+                "value.Leader",
+                "value.Id"
+        ],
+        "FieldsInfo": [
+                {
+                        "HumpName": "Id",
+                        "Comment": "主键"
+                },
+                {
+                        "HumpName": "Name",
+                        "Comment": "部门名称或公司名称"
+                },
+                {
+                        "HumpName": "ParentId",
+                        "Comment": "父分组ID"
+                },
+                {
+                        "HumpName": "Level",
+                        "Comment": "级别"
+                },
+                {
+                        "HumpName": "ParentIds",
+                        "Comment": "树结构路径"
+                },
+                {
+                        "HumpName": "Sort",
+                        "Comment": "分组排序值"
+                },
+                {
+                        "HumpName": "CreateBy",
+                        "Comment": "创建者"
+                },
+                {
+                        "HumpName": "CreateDate",
+                        "Comment": "创建时间"
+                },
+                {
+                        "HumpName": "UpdateBy",
+                        "Comment": "更新者"
+                },
+                {
+                        "HumpName": "UpdateDate",
+                        "Comment": "更新时间"
+                },
+                {
+                        "HumpName": "Remarks",
+                        "Comment": "备注信息"
+                },
+                {
+                        "HumpName": "DelFlag",
+                        "Comment": "删除标识"
+                },
+                {
+                        "HumpName": "Tel",
+                        "Comment": "公司电话"
+                },
+                {
+                        "HumpName": "Address",
+                        "Comment": "公司地址"
+                },
+                {
+                        "HumpName": "ShortName",
+                        "Comment": "简称"
+                },
+                {
+                        "HumpName": "GroupType",
+                        "Comment": "组织类型：10：总公司，20：子公司，30：门店，40：部门"
+                },
+                {
+                        "HumpName": "Province",
+                        "Comment": "省"
+                },
+                {
+                        "HumpName": "City",
+                        "Comment": "市"
+                },
+                {
+                        "HumpName": "County",
+                        "Comment": "区县"
+                },
+                {
+                        "HumpName": "Leader",
+                        "Comment": "领导人，sys_user.id"
+                }
+        ],
+        "NullFieldsInfo": [
+                {
+                        "GoType": "string",
+                        "HumpName": "Id",
+                        "OriFieldType": "varchar",
+                        "Comment": "主键"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "Name",
+                        "OriFieldType": "varchar",
+                        "Comment": "部门名称或公司名称"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "ParentId",
+                        "OriFieldType": "varchar",
+                        "Comment": "父分组ID"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "Level",
+                        "OriFieldType": "bigint",
+                        "Comment": "级别"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "ParentIds",
+                        "OriFieldType": "varchar",
+                        "Comment": "树结构路径"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "Sort",
+                        "OriFieldType": "int",
+                        "Comment": "分组排序值"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "CreateBy",
+                        "OriFieldType": "varchar",
+                        "Comment": "创建者"
+                },
+                {
+                        "GoType": "time.Time",
+                        "HumpName": "CreateDate",
+                        "OriFieldType": "datetime",
+                        "Comment": "创建时间"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "UpdateBy",
+                        "OriFieldType": "varchar",
+                        "Comment": "更新者"
+                },
+                {
+                        "GoType": "time.Time",
+                        "HumpName": "UpdateDate",
+                        "OriFieldType": "datetime",
+                        "Comment": "更新时间"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "Remarks",
+                        "OriFieldType": "varchar",
+                        "Comment": "备注信息"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "DelFlag",
+                        "OriFieldType": "tinyint",
+                        "Comment": "删除标识"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "Tel",
+                        "OriFieldType": "varchar",
+                        "Comment": "公司电话"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "Address",
+                        "OriFieldType": "varchar",
+                        "Comment": "公司地址"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "ShortName",
+                        "OriFieldType": "varchar",
+                        "Comment": "简称"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "GroupType",
+                        "OriFieldType": "tinyint",
+                        "Comment": "组织类型：10：总公司，20：子公司，30：门店，40：部门"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "Province",
+                        "OriFieldType": "int",
+                        "Comment": "省"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "City",
+                        "OriFieldType": "int",
+                        "Comment": "市"
+                },
+                {
+                        "GoType": "int64",
+                        "HumpName": "County",
+                        "OriFieldType": "int",
+                        "Comment": "区县"
+                },
+                {
+                        "GoType": "string",
+                        "HumpName": "Leader",
+                        "OriFieldType": "varchar",
+                        "Comment": "领导人，sys_user.id"
+                }
+        ],
+        "InsertInfo": [
+                {
+                        "HumpName": "Name",
+                        "Comment": "部门名称或公司名称"
+                },
+                {
+                        "HumpName": "ParentId",
+                        "Comment": "父分组ID"
+                },
+                {
+                        "HumpName": "Level",
+                        "Comment": "级别"
+                },
+                {
+                        "HumpName": "ParentIds",
+                        "Comment": "树结构路径"
+                },
+                {
+                        "HumpName": "Sort",
+                        "Comment": "分组排序值"
+                },
+                {
+                        "HumpName": "CreateBy",
+                        "Comment": "创建者"
+                },
+                {
+                        "HumpName": "CreateDate",
+                        "Comment": "创建时间"
+                },
+                {
+                        "HumpName": "UpdateBy",
+                        "Comment": "更新者"
+                },
+                {
+                        "HumpName": "UpdateDate",
+                        "Comment": "更新时间"
+                },
+                {
+                        "HumpName": "Remarks",
+                        "Comment": "备注信息"
+                },
+                {
+                        "HumpName": "DelFlag",
+                        "Comment": "删除标识"
+                },
+                {
+                        "HumpName": "Tel",
+                        "Comment": "公司电话"
+                },
+                {
+                        "HumpName": "Address",
+                        "Comment": "公司地址"
+                },
+                {
+                        "HumpName": "ShortName",
+                        "Comment": "简称"
+                },
+                {
+                        "HumpName": "GroupType",
+                        "Comment": "组织类型：10：总公司，20：子公司，30：门店，40：部门"
+                },
+                {
+                        "HumpName": "Province",
+                        "Comment": "省"
+                },
+                {
+                        "HumpName": "City",
+                        "Comment": "市"
+                },
+                {
+                        "HumpName": "County",
+                        "Comment": "区县"
+                },
+                {
+                        "HumpName": "Leader",
+                        "Comment": "领导人，sys_user.id"
+                }
+        ],
+        "TableComment": "// 组织架构",
+        "Fields": [
+                {
+                        "Name": "Id",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "id",
+                        "FormatFields": "`gorm:\"id\"`",
+                        "Remark": "// 主键"
+                },
+                {
+                        "Name": "Name",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "name",
+                        "FormatFields": "`gorm:\"name\"`",
+                        "Remark": "// 部门名称或公司名称"
+                },
+                {
+                        "Name": "ParentId",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "parent_id",
+                        "FormatFields": "`gorm:\"parent_id\"`",
+                        "Remark": "// 父分组ID"
+                },
+                {
+                        "Name": "Level",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "level",
+                        "FormatFields": "`gorm:\"level\"`",
+                        "Remark": "// 级别"
+                },
+                {
+                        "Name": "ParentIds",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "parent_ids",
+                        "FormatFields": "`gorm:\"parent_ids\"`",
+                        "Remark": "// 树结构路径"
+                },
+                {
+                        "Name": "Sort",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "sort",
+                        "FormatFields": "`gorm:\"sort\"`",
+                        "Remark": "// 分组排序值"
+                },
+                {
+                        "Name": "CreateBy",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "create_by",
+                        "FormatFields": "`gorm:\"create_by\"`",
+                        "Remark": "// 创建者"
+                },
+                {
+                        "Name": "CreateDate",
+                        "Type": "time.Time",
+                        "NullType": "mysql.NullTime",
+                        "DbName": "",
+                        "DbOriField": "create_date",
+                        "FormatFields": "`gorm:\"create_date\"`",
+                        "Remark": "// 创建时间"
+                },
+                {
+                        "Name": "UpdateBy",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "update_by",
+                        "FormatFields": "`gorm:\"update_by\"`",
+                        "Remark": "// 更新者"
+                },
+                {
+                        "Name": "UpdateDate",
+                        "Type": "time.Time",
+                        "NullType": "mysql.NullTime",
+                        "DbName": "",
+                        "DbOriField": "update_date",
+                        "FormatFields": "`gorm:\"update_date\"`",
+                        "Remark": "// 更新时间"
+                },
+                {
+                        "Name": "Remarks",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "remarks",
+                        "FormatFields": "`gorm:\"remarks\"`",
+                        "Remark": "// 备注信息"
+                },
+                {
+                        "Name": "DelFlag",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "del_flag",
+                        "FormatFields": "`gorm:\"del_flag\"`",
+                        "Remark": "// 删除标识"
+                },
+                {
+                        "Name": "Tel",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "tel",
+                        "FormatFields": "`gorm:\"tel\"`",
+                        "Remark": "// 公司电话"
+                },
+                {
+                        "Name": "Address",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "address",
+                        "FormatFields": "`gorm:\"address\"`",
+                        "Remark": "// 公司地址"
+                },
+                {
+                        "Name": "ShortName",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "short_name",
+                        "FormatFields": "`gorm:\"short_name\"`",
+                        "Remark": "// 简称"
+                },
+                {
+                        "Name": "GroupType",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "group_type",
+                        "FormatFields": "`gorm:\"group_type\"`",
+                        "Remark": "// 组织类型：10：总公司，20：子公司，30：门店，40：部门"
+                },
+                {
+                        "Name": "Province",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "province",
+                        "FormatFields": "`gorm:\"province\"`",
+                        "Remark": "// 省"
+                },
+                {
+                        "Name": "City",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "city",
+                        "FormatFields": "`gorm:\"city\"`",
+                        "Remark": "// 市"
+                },
+                {
+                        "Name": "County",
+                        "Type": "int64",
+                        "NullType": "sql.NullInt64",
+                        "DbName": "",
+                        "DbOriField": "county",
+                        "FormatFields": "`gorm:\"county\"`",
+                        "Remark": "// 区县"
+                },
+                {
+                        "Name": "Leader",
+                        "Type": "string",
+                        "NullType": "sql.NullString",
+                        "DbName": "",
+                        "DbOriField": "leader",
+                        "FormatFields": "`gorm:\"leader\"`",
+                        "Remark": "// 领导人，sys_user.id"
+                }
+        ]
+}

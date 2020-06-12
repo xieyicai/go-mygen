@@ -120,6 +120,8 @@ type SqlInfo struct {
 	FieldsInfo          []*SqlFieldInfo     // 字段信息
 	NullFieldsInfo      []*NullSqlFieldInfo // 判断为空时
 	InsertInfo          []*SqlFieldInfo
+	TableComment        string        // 表注释
+	Fields              []*FieldsInfo // 表字段
 }
 
 // 查询使用的字段结构信息

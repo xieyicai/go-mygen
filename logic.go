@@ -13,7 +13,7 @@ import (
 type Logic struct {
 	T    *Tools
 	DB   *ModelS
-	Path string
+	Path string //输出目录
 	Once sync.Once
 	l    sync.Mutex
 }
@@ -79,7 +79,7 @@ func (l *Logic) CreateCURD(formatList []string) (err error) {
 			return err
 		}
 		// 生成增,删,改,查文件
-		err = l.GenerateCURDFile(table.Name, table.Comment, tableDesc)
+		err = l.GenerateCURDFile(req)
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func (l *Logic) GetRoot() string {
 }
 
 // 创建结构体
-func (l *Logic) GenerateDBStructure(tableName, tableComment, path string, tableDesc []*TableDesc) (err error) {
+func (l *Logic) GenerateDBStructure(tableName, tableComment, path string, req *EntityReq) (err error) {
 	// 加入package
 	packageStr := `// 数据库表内结构体信息
 package mysql
@@ -196,16 +196,7 @@ package mysql
 		fts[0] = "json"
 		fts = append(fts, index0)
 	}
-	for _, val := range tableDesc {
-		TableData.Fields = append(TableData.Fields, &FieldsInfo{
-			Name:         l.T.Capitalize(val.ColumnName),
-			Type:         val.GolangType,
-			NullType:     val.MysqlNullType,
-			DbOriField:   val.ColumnName,
-			FormatFields: FormatField(val.ColumnName, fts),
-			Remark:       val.ColumnComment,
-		})
-	}
+	TableData.Fields = req.GetFields(l.T)
 	content := bytes.NewBuffer([]byte{})
 	tpl.Execute(content, TableData)
 	// 表信息写入文件
@@ -256,16 +247,7 @@ import (
 		return
 	}
 	// 装载表字段信息
-	for _, val := range req.TableDesc {
-		TableData.Fields = append(TableData.Fields, &FieldsInfo{
-			Name:         l.T.Capitalize(val.ColumnName),
-			Type:         val.GolangType,
-			NullType:     val.MysqlNullType,
-			DbOriField:   val.ColumnName,
-			FormatFields: FormatField(val.ColumnName, req.FormatList),
-			Remark:       AddToComment(val.ColumnComment, ""),
-		})
-	}
+	TableData.Fields = req.GetFields(l.T)
 	content := bytes.NewBuffer([]byte{})
 	tpl.Execute(content, TableData)
 	// 表信息写入文件
@@ -278,7 +260,7 @@ import (
 }
 
 // 生成C增,U删,R查,D改,的文件
-func (l *Logic) GenerateCURDFile(tableName, tableComment string, tableDesc []*TableDesc) (err error) {
+func (l *Logic) GenerateCURDFile(req *EntityReq) (err error) {
 	var (
 		allFields       = make([]string, 0)
 		insertFields    = make([]string, 0)
@@ -291,7 +273,7 @@ func (l *Logic) GenerateCURDFile(tableName, tableComment string, tableDesc []*Ta
 		primaryType     = ""
 	)
 
-	for _, item := range tableDesc {
+	for _, item := range req.TableDesc {
 		allFields = append(allFields, "`"+item.ColumnName+"`")
 		if item.PrimaryKey == false && item.ColumnName != "updated_at" && item.ColumnName != "created_at" {
 			insertFields = append(insertFields, item.ColumnName)
@@ -333,14 +315,14 @@ func (l *Logic) GenerateCURDFile(tableName, tableComment string, tableDesc []*Ta
 		InsertMark = InsertMark[:len(InsertMark)-1]
 	}
 	sqlInfo := &SqlInfo{
-		TableName:           tableName,
+		TableName:           req.TableName,
 		PrimaryKey:          PrimaryKey,
 		PrimaryType:         primaryType,
-		StructTableName:     l.T.Capitalize(tableName),
-		NullStructTableName: l.T.Capitalize(tableName) + DbNullPrefix,
+		StructTableName:     l.T.Capitalize(req.TableName),
+		NullStructTableName: l.T.Capitalize(req.TableName) + DbNullPrefix,
 		PkgEntity:           PkgEntity + ".",
 		PkgTable:            PkgTable + ".",
-		UpperTableName:      TablePrefix + l.T.ToUpper(tableName),
+		UpperTableName:      TablePrefix + l.T.ToUpper(req.TableName),
 		AllFieldList:        strings.Join(allFields, ","),
 		InsertFieldList:     strings.Join(insertFields, ","),
 		InsertMark:          InsertMark,
@@ -349,8 +331,10 @@ func (l *Logic) GenerateCURDFile(tableName, tableComment string, tableDesc []*Ta
 		FieldsInfo:          fieldsList,
 		NullFieldsInfo:      nullFieldList,
 		InsertInfo:          InsertInfo,
+		TableComment:        AddToComment(req.TableComment, ""),
+		Fields:              req.GetFields(l.T),
 	}
-	err = l.GenerateSQL(sqlInfo, tableComment)
+	err = l.GenerateSQL(sqlInfo, req.TableComment)
 	// 添加一个实例
 	l.Once.Do(func() {
 		l.GenerateExample(sqlInfo.StructTableName)
@@ -470,9 +454,9 @@ func (l *Logic) GenerateInit() (err error) {
 func (l *Logic) GenerateSQL(info *SqlInfo, tableComment string) (err error) {
 	// 写入表名
 	goFile := l.GetMysqlDir() + info.TableName + ".go"
-	s := fmt.Sprintf(`
-// %s
+	s := fmt.Sprintf(`// %s
 package %s
+
 import(
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
@@ -496,11 +480,13 @@ import(
 	content := bytes.NewBuffer([]byte{})
 	err = tpl.Execute(content, info)
 	if err != nil {
+		fmt.Printf("Template rendering failed. %v\r\n", err)
 		return
 	}
 	// 表信息写入文件
 	if l.T.CheckFileContainsChar(goFile, info.StructTableName) == false {
-		err = WriteAppendFile(goFile, content.String())
+		con := strings.Replace(content.String(), "&#34;", `"`, -1)
+		err = WriteAppendFile(goFile, con)
 		if err != nil {
 			return
 		}
@@ -529,4 +515,20 @@ func (l *Logic) GenerateMarkdown(data *MarkDownData) (err error) {
 		return
 	}
 	return
+}
+
+func (req *EntityReq) GetFields(tool *Tools) []*FieldsInfo {
+	var fields []*FieldsInfo
+	// 装载表字段信息
+	for _, val := range req.TableDesc {
+		fields = append(fields, &FieldsInfo{
+			Name:         tool.Capitalize(val.ColumnName),
+			Type:         val.GolangType,
+			NullType:     val.MysqlNullType,
+			DbOriField:   val.ColumnName,
+			FormatFields: FormatField(val.ColumnName, req.FormatList),
+			Remark:       AddToComment(val.ColumnComment, ""),
+		})
+	}
+	return fields
 }

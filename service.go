@@ -25,7 +25,7 @@ func (m *ModelS) GetTableNameAndComment() (err error) {
 func (m *ModelS) findDbTables() (NameAndComment []TableNameAndComment, err error) {
 	m.l.Lock()
 	defer m.l.Unlock()
-	result, err := m.Find("SELECT `table_name`, table_comment FROM information_schema.tables WHERE table_schema = ?", m.DBName)
+	result, err := m.Find("SELECT `table_name` as table_name, table_comment as table_comment FROM information_schema.tables WHERE table_schema = ?", m.DBName)
 	if err != nil {
 		return
 	}
@@ -51,7 +51,7 @@ func (m *ModelS) findDbTables() (NameAndComment []TableNameAndComment, err error
 func (m *ModelS) GetTableDesc(tableName string) (reply []*TableDesc, err error) {
 	m.l.Lock()
 	defer m.l.Unlock()
-	result, err := m.Find("select column_name,data_type, column_key, is_nullable,column_default,column_type, column_comment from information_schema.columns "+
+	result, err := m.Find("select column_name as column_name,data_type as data_type, column_key as column_key, is_nullable as is_nullable,column_default as column_default,column_type as column_type, column_comment as column_comment from information_schema.columns "+
 		"where table_name = ? and table_schema = ?", tableName, m.DBName)
 	if err != nil {
 		return

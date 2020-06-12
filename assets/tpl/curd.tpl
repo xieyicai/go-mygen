@@ -1,150 +1,172 @@
-type {{.StructTableName}}Model struct {
-DB *sql.DB
+const Table{{.StructTableName}} = "{{.TableName}}"
+
+{{.TableComment}}
+type {{.StructTableName}} struct {
+{{range $j, $item := .Fields}}	{{$item.Name}}	   {{$item.Type}}	{{$item.FormatFields}}		{{$item.Remark}}
+{{end}}}
+
+{{.TableComment}} Null Entity
+type {{.NullStructTableName}} struct {
+{{range $j, $row := .Fields}}	{{$row.Name}}	{{$row.NullType}}		 {{$row.Remark}}
+{{end}}}
+
+func (row *{{.NullStructTableName}}) To{{.StructTableName}}() *{{.StructTableName}} {
+	return &{{.StructTableName}}{
+	{{- range $j, $row := .Fields}}
+	{{- if eq $row.Type "float64"}}
+		{{$row.Name}}:	row.{{$row.Name}}.Float64,	{{$row.Remark}}
+	{{- else if eq $row.Type "float"}}
+		{{$row.Name}}:	row.{{$row.Name}}.Float,	{{$row.Remark}}
+	{{- else if eq $row.Type "int64"}}
+		{{$row.Name}}:	row.{{$row.Name}}.Int64,	{{$row.Remark}}
+	{{- else if eq $row.Type "int"}}
+		{{$row.Name}}:	row.{{$row.Name}}.Int,	{{$row.Remark}}
+	{{- else if eq $row.Type "time.Time"}}
+		{{$row.Name}}:	row.{{$row.Name}}.Time,	{{$row.Remark}}
+	{{- else}}
+		{{$row.Name}}:	row.{{$row.Name}}.String,	{{$row.Remark}}
+	{{- end}}
+	{{- end}}
+	}
 }
 
-func New{{.StructTableName}}(db ...*sql.DB) *{{.StructTableName}}Model {
-if len(db) > 0 {
-    return &{{.StructTableName}}Model{
-        DB: db[0],
-    }
+type {{.StructTableName}}Model struct {
+	DB *gorm.DB
 }
-return &{{.StructTableName}}Model{
-    DB: masterDB,
-}
+
+func New{{.StructTableName}}(db ...*gorm.DB) (*{{.StructTableName}}Model, error) {
+	if len(db) > 0 {
+		return &{{.StructTableName}}Model{
+			DB: db[0],
+		}, nil
+	}
+	if conn, err := conf.DefaultConf.GetDb(false); err!=nil {
+		return nil, err
+	}else{
+		return &{{.StructTableName}}Model{
+			DB: conn,
+		}, nil
+	}
 }
 
 // 获取所有的表字段
 func (m *{{.StructTableName}}Model) getColumns() string {
-return " {{.AllFieldList}} "
+	return " {{.AllFieldList}} "
 }
 
 // 获取多行数据.
-func (m *{{.StructTableName}}Model) getRows(sqlTxt string, params ...interface{}) (rowsResult []*{{.PkgEntity}}{{.StructTableName}}, err error) {
-query, err := m.DB.Query(sqlTxt, params...)
-if err != nil {
-return
-}
-defer query.Close()
-for query.Next() {
-row := {{.PkgEntity}}{{.NullStructTableName}}{}
-err = query.Scan(
-{{range .NullFieldsInfo}}&row.{{.HumpName}},// {{.Comment}}
-{{end}})
-if nil != err {
-continue
-}
-rowsResult = append(rowsResult, &{{.PkgEntity}}{{.StructTableName}}{
-{{range .NullFieldsInfo}}{{if eq .GoType "float64"}}{{.HumpName}}:row.{{.HumpName}}.Float64,//{{.Comment}}
-{{else if eq .GoType "int64"}}{{.HumpName}}:row.{{.HumpName}}.Int64,//{{.Comment}}
-{{else if eq .GoType "time.Time"}}{{.HumpName}}:row.{{.HumpName}}.Time,//{{.Comment}}
-{{else}}{{.HumpName}}:row.{{.HumpName}}.String,// {{.Comment}}
-{{end}}{{end}}})
-}
-return
+func (m *{{.StructTableName}}Model) getRows(sqlTxt string, params ...interface{}) (rowsResult []*{{.StructTableName}}, err error) {
+	query, err := m.DB.DB().Query(sqlTxt, params...)
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err:=query.Close(); err!=nil {
+			fmt.Printf("释放数据库连接失败。%v\r\n", err)
+		}
+	}()
+	for query.Next() {
+		row := {{.NullStructTableName}}{}
+		err = query.Scan(
+		{{range .NullFieldsInfo}}&row.{{.HumpName}},// {{.Comment}}
+		{{end}})
+		if nil != err {
+			fmt.Printf("查询失败。%v\r\n", err)
+			continue
+		}
+		rowsResult = append(rowsResult, row.To{{.StructTableName}}())
+	}
+	return
 }
 
 // 获取单行数据
-func (m *{{.StructTableName}}Model) getRow(sqlText string, params ...interface{}) (rowResult *{{.PkgEntity}}{{.StructTableName}}, err error) {
-query := m.DB.QueryRow(sqlText, params...)
-row := {{.PkgEntity}}{{.NullStructTableName}}{}
-err = query.Scan(
-{{range .NullFieldsInfo}}&row.{{.HumpName}},// {{.Comment}}
-{{end}})
-if err != sql.ErrNoRows {
-return
-}
-rowResult = &{{.PkgEntity}}{{.StructTableName}}{
-{{range .NullFieldsInfo}}{{if eq .GoType "float64"}}{{.HumpName}}:row.{{.HumpName}}.Float64, //{{.Comment}}
-{{else if eq .GoType "int64"}}{{.HumpName}}:row.{{.HumpName}}.Int64,//{{.Comment}}
-{{else if eq .GoType "time.Time"}}{{.HumpName}}:row.{{.HumpName}}.Time,//{{.Comment}}
-{{else}}{{.HumpName}}:row.{{.HumpName}}.String,//{{.Comment}}
-{{end}}{{end}}}
-
-return
+func (m *{{.StructTableName}}Model) getRow(sqlText string, params ...interface{}) (rowResult *{{.StructTableName}}, err error) {
+	query := m.DB.DB().QueryRow(sqlText, params...)
+	row := {{.NullStructTableName}}{}
+	err = query.Scan(
+	{{range .NullFieldsInfo}}&row.{{.HumpName}},// {{.Comment}}
+	{{end}})
+	if err != sql.ErrNoRows {
+		fmt.Printf("查询失败。%v\r\n", err)
+		return
+	}
+	rowResult = row.To{{.StructTableName}}()
+	return
 }
 
 // _更新数据
 func (m *{{.StructTableName}}Model) Save(sqlTxt string, value ...interface{}) (b bool, err error) {
-stmt, err := m.DB.Prepare(sqlTxt)
-if err != nil {
-return
-}
-defer stmt.Close()
-result, err := stmt.Exec(value...)
-if err != nil {
-return
-}
-var affectCount int64
-affectCount, err = result.RowsAffected()
-if err != nil {
-return
-}
-b = affectCount > 0
-return
+	stmt, err := m.DB.DB().Prepare(sqlTxt)
+	defer func() {
+		if err:=stmt.Close(); err!=nil {
+			fmt.Printf("释放数据库连接失败。%v\r\n", err)
+		}
+	}()
+	result, err := stmt.Exec(value...)
+	if err != nil {
+		return
+	}
+	var affectCount int64
+	affectCount, err = result.RowsAffected()
+	if err != nil {
+		return
+	}
+	b = affectCount > 0
+	return
 }
 
 // 新增信息
-func (m *{{.StructTableName}}Model) Create(value *{{.PkgEntity}}{{.StructTableName}}) (lastId int64, err error) {
-const sqlText = "INSERT INTO " + {{.PkgTable}}{{.UpperTableName}} + " ({{.InsertFieldList}}) VALUES ({{.InsertMark}})"
-stmt, err := m.DB.Prepare(sqlText)
-if err != nil {
-return
-}
-defer stmt.Close()
-result, err := stmt.Exec(
-{{range .InsertInfo}}value.{{.HumpName}},// {{.Comment}}
-{{end}})
-if err != nil {
-return
-}
-lastId, err = result.LastInsertId()
-if err != nil {
-return
-}
-return
+func (m *{{.StructTableName}}Model) Create(value *{{.StructTableName}}) error {
+	const sqlText = "INSERT INTO " + Table{{.StructTableName}} + " ({{.InsertFieldList}}) VALUES ({{.InsertMark}})"
+	stmt, err := m.DB.DB().Prepare(sqlText)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err:=stmt.Close(); err!=nil {
+			fmt.Printf("释放数据库连接失败。%v\r\n", err)
+		}
+	}()
+	_, err = stmt.Exec(
+	{{range .InsertInfo}}value.{{.HumpName}},// {{.Comment}}
+	{{end}})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 更新数据
-func (m *{{.StructTableName}}Model) Update(value *{{.PkgEntity}}{{.StructTableName}}) (b bool, err error) {
- sqlText := "UPDATE " + {{.PkgTable}}{{.UpperTableName}} + " SET {{.UpdateFieldList}} WHERE {{.PrimaryKey}} = ?"
-params := make([]interface{}, 0)
-{{range $i, $val := .UpdateListField}}params = append(params, {{$val}})
-{{end}}
-return m.Save(sqlText, params...)
+func (m *{{.StructTableName}}Model) Update(value *{{.StructTableName}}) (b bool, err error) {
+	sqlText := "UPDATE " + Table{{.StructTableName}} + " SET {{.UpdateFieldList}} WHERE {{.PrimaryKey}} = ?"
+	params := make([]interface{}, 0)
+	{{range $i, $val := .UpdateListField}}params = append(params, {{$val}})
+	{{end}}
+	return m.Save(sqlText, params...)
 }
 
 // 查询多行数据
-func (m *{{.StructTableName}}Model) Find(value *{{.PkgEntity}}{{.StructTableName}}) (resList []*{{.PkgEntity}}{{.StructTableName}}, err error) {
- sqlText := "SELECT" + m.getColumns() + "FROM " + {{.PkgTable}}{{.UpperTableName}}
-resList, err = m.getRows(sqlText)
-return
+func (m *{{.StructTableName}}Model) All() (resList []*{{.StructTableName}}, err error) {
+	sqlText := "SELECT" + m.getColumns() + "FROM " + Table{{.StructTableName}}
+	resList, err = m.getRows(sqlText)
+	return
 }
 
 // 获取单行数据
-func (m *{{.StructTableName}}Model) First(value *{{.PkgEntity}}{{.StructTableName}}) (result *{{.PkgEntity}}{{.StructTableName}}, err error) {
- sqlText := "SELECT" + m.getColumns() + "FROM " + {{.PkgTable}}{{.UpperTableName}} + " LIMIT 1"
-result, err = m.getRow(sqlText)
-if err != nil {
-return
-}
-return
+func (m *{{.StructTableName}}Model) First() (result *{{.StructTableName}}, err error) {
+	sqlText := "SELECT" + m.getColumns() + "FROM " + Table{{.StructTableName}} + " LIMIT 1"
+	result, err = m.getRow(sqlText)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // 获取最后一行数据
-func (m *{{.StructTableName}}Model) Last(value *{{.PkgEntity}}{{.StructTableName}}) (result *{{.PkgEntity}}{{.StructTableName}}, err error) {
- sqlText := "SELECT" + m.getColumns() + "FROM " + {{.PkgTable}}{{.UpperTableName}} + " ORDER BY ID DESC LIMIT 1"
-result, err = m.getRow(sqlText)
-if err != nil {
-return
-}
-return
-}
-
-// 获取单个数据
-func (m *{{.StructTableName}}Model) One(userId int64) (result int64, err error) {
-	sqlText := "SELECT id FROM " + {{.PkgTable}}{{.UpperTableName}} + " where id=?"
-	rows := m.DB.QueryRow(sqlText, userId)
-	if err = rows.Scan(&result); err != nil {
+func (m *{{.StructTableName}}Model) Last() (result *{{.StructTableName}}, err error) {
+	sqlText := "SELECT" + m.getColumns() + "FROM " + Table{{.StructTableName}} + " ORDER BY ID DESC LIMIT 1"
+	result, err = m.getRow(sqlText)
+	if err != nil {
 		return
 	}
 	return
@@ -152,19 +174,19 @@ func (m *{{.StructTableName}}Model) One(userId int64) (result int64, err error) 
 
 // 获取行数
 func (m *{{.StructTableName}}Model) Count() (count int64, err error) {
- sqlText := "SELECT COUNT(*) FROM " + {{.PkgTable}}{{.UpperTableName}}
-query := m.DB.QueryRow(sqlText)
-err = query.Scan(&count)
-if err != nil {
-return
-}
-return
+	sqlText := "SELECT COUNT(*) FROM " + Table{{.StructTableName}}
+	query := m.DB.DB().QueryRow(sqlText)
+	err = query.Scan(&count)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // 判断是否存在
 func (m *{{.StructTableName}}Model) Exists(id int64) (b bool, err error) {
-	sqlText := "SELECT COUNT(*) FROM " + {{.PkgTable}}{{.UpperTableName}} + " where id = ?"
-	query := m.DB.QueryRow(sqlText, id)
+	sqlText := "SELECT COUNT(*) FROM " + Table{{.StructTableName}} + " where id = ?"
+	query := m.DB.DB().QueryRow(sqlText, id)
 	var count int64
 	err = query.Scan(&count)
 	if err != nil {
@@ -174,5 +196,13 @@ func (m *{{.StructTableName}}Model) Exists(id int64) (b bool, err error) {
 		b = true
 		return
 	}
+	return
+}
+
+// 按指定的条件查询列表
+func (m *{{.StructTableName}}Model) Find(where *{{.StructTableName}}) (resList []*{{.StructTableName}}, err error) {
+	m.DB.Error=nil
+	m.DB.Where(where).Find(&resList).Order("{{.PrimaryKey}} desc")
+	err = m.DB.Error
 	return
 }

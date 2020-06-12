@@ -62,6 +62,7 @@ var CmdHelp = []CmdEntity{
 	{"7, c, clear", "Clear the screen"},
 	{"8, h, help", "Show help list"},
 	{"9, q, quit", "Quit"},
+	{"r", "Remove output folder"},
 }
 
 //mysql类型 <=> golang类型

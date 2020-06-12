@@ -359,3 +359,16 @@ func CheckCharDoSpecialArr(s string, char byte, reg string) []string {
 	s = CheckCharDoSpecial(s, char, reg)
 	return strings.Split(s, string(char))
 }
+
+/**
+ * 将结构体转换成格式化的JSON字符串，并打印
+ * @obj  要序列化的结构体
+ */
+func PrintJson(obj interface{}) {
+	jj, err := json.MarshalIndent(obj, "", "\t")
+	if err != nil {
+		fmt.Printf("无法转换成json：%v\r\n", err)
+	} else {
+		fmt.Printf("------------------------ JSON：\r\n%s\r\n", string(jj))
+	}
+}

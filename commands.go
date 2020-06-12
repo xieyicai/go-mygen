@@ -36,6 +36,7 @@ func (c *commands) Handlers() map[string]func(args []string) int {
 		"help":  c.Help,
 		"quit":  c.Quit,
 		"q":     c.Quit,
+		"r":     c.RemoveOutput,
 	}
 }
 
@@ -62,12 +63,7 @@ func (c *commands) Help(args []string) int {
 
 //生成golang表对应的结构实体
 func (c *commands) GenerateEntry(args []string) int {
-	fmt.Print("Do you need to set the format of the structure?(Yes|No)>")
-	line, _, _ := bufio.NewReader(os.Stdin).ReadLine()
-	switch strings.ToLower(string(line)) {
-	case "yes", "y":
-		formats = c._setFormat()
-	}
+	c.InitFormat(false)
 	err := c.l.CreateEntity(formats)
 	if err != nil {
 		log.Println("GenerateEntry>>", err.Error())
@@ -84,6 +80,7 @@ func (c *commands) CustomFormat(args []string) int {
 
 //生成golang操作mysql的CRUD增删改查语句
 func (c *commands) GenerateCURD(args []string) int {
+	c.InitFormat(false)
 	err := c.l.CreateCURD(formats)
 	if err != nil {
 		log.Println("GenerateCURD>>", err.Error())
@@ -167,7 +164,7 @@ func (c *commands) _showTableList(NameAndComment []TableNameAndComment) {
 
 //set struct format
 func (c *commands) _setFormat() []string {
-	fmt.Print("Set the mapping name of the structure, separated by a comma (example :json,gorm)>")
+	fmt.Print("Set the mapping name of the structure, separated by a comma (example :json,gorm,xml)>")
 	input, _, _ := bufio.NewReader(os.Stdin).ReadLine()
 	if string(input) != "" {
 		formatList := CheckCharDoSpecialArr(string(input), ',', `[\w\,\-]+`)
@@ -178,4 +175,23 @@ func (c *commands) _setFormat() []string {
 	}
 	fmt.Println("Set failed")
 	return nil
+}
+
+func (c *commands) InitFormat(force bool) {
+	if force || len(formats) == 0 {
+		fmt.Print("Do you need to set the format of the structure?(Yes|No)>")
+		line, _, _ := bufio.NewReader(os.Stdin).ReadLine()
+		switch strings.ToLower(string(line)) {
+		case "yes", "y":
+			formats = c._setFormat()
+		}
+	}
+}
+
+func (c *commands) RemoveOutput(args []string) int {
+	err := os.RemoveAll(c.l.Path)
+	if err != nil {
+		fmt.Printf("Directory deletion failed. %v\r\n", err)
+	}
+	return 0
 }
