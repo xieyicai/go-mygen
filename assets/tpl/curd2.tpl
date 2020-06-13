@@ -15,7 +15,7 @@ return &{{.StructTableName}}Model{
 
 // 获取所有的表字段
 func (m *{{.StructTableName}}Model) getColumns() string {
-return " {{.AllFieldList}} "
+	return " {{.AllFieldList}} "
 }
 
 // 获取多行数据.
