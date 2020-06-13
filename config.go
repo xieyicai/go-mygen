@@ -46,7 +46,7 @@ const (
 )
 
 const (
-	PkgDbModels = "mysql"  //db_models命名空间
+	PkgDbModels = "models" //db_models命名空间
 	PkgEntity   = "entity" // entity实体命名空间
 	PkgTable    = "config" //表的空间名称
 )
@@ -79,8 +79,8 @@ var MysqlTypeToGoType = map[string]string{
 	"date":       "string",
 	"time":       "string",
 	"year":       "string",
-	"datetime":   "time.Time",
-	"timestamp":  "time.Time",
+	"datetime":   "Time",
+	"timestamp":  "Time",
 	"char":       "string",
 	"varchar":    "string",
 	"tinyblob":   "string",
@@ -107,8 +107,8 @@ var MysqlTypeToGoNullType = map[string]string{
 	"date":       "sql.NullString",
 	"time":       "sql.NullString",
 	"year":       "sql.NullString",
-	"datetime":   "mysql.NullTime",
-	"timestamp":  "mysql.NullTime",
+	"datetime":   "sql.NullTime",
+	"timestamp":  "sql.NullTime",
 	"char":       "sql.NullString",
 	"varchar":    "sql.NullString",
 	"tinyblob":   "sql.NullString",

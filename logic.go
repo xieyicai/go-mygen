@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/sprig"
 	"html/template"
 	"log"
 	"strings"
@@ -181,7 +182,7 @@ package mysql
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("structure").Parse(string(tplByte))
+	tpl, err := template.New("structure").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -242,7 +243,7 @@ import (
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("entity").Parse(string(tplByte))
+	tpl, err := template.New("entity").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -355,7 +356,7 @@ func (l *Logic) GenerateExample(name string) {
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("example").Parse(string(tplByte))
+	tpl, err := template.New("example").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -397,7 +398,7 @@ func (l *Logic) GenerateTableList(list []*TableList) (err error) {
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("table_list").Parse(string(tplByte))
+	tpl, err := template.New("table_list").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -432,7 +433,7 @@ func (l *Logic) GenerateInit() (err error) {
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("init").Parse(string(tplByte))
+	tpl, err := template.New("init").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -472,7 +473,7 @@ import(
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("CURD").Parse(string(tplByte))
+	tpl, err := template.New("CURD").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -504,7 +505,7 @@ func (l *Logic) GenerateMarkdown(data *MarkDownData) (err error) {
 	}
 	// 解析
 	content := bytes.NewBuffer([]byte{})
-	tpl, err := template.New("markdown").Parse(string(tplByte))
+	tpl, err := template.New("markdown").Funcs(sprig.FuncMap()).Parse(string(tplByte))
 	err = tpl.Execute(content, data)
 	if err != nil {
 		return

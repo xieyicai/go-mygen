@@ -1,9 +1,24 @@
+{{- $isTree := 0 }}
+{{- range $j, $row := .Fields}}
+	{{- if eq $row.Name "ParentId"}}
+        {{- $isTree = add $isTree 1 }}
+    {{- else if eq $row.Name "Sort"}}
+        {{- $isTree = add $isTree 1 }}
+    {{- end}}
+{{- end -}}
+
 const Table{{.StructTableName}} = "{{.TableName}}"
 
 {{.TableComment}}
 type {{.StructTableName}} struct {
-{{range $j, $item := .Fields}}	{{$item.Name}}	   {{$item.Type}}	{{$item.FormatFields}}		{{$item.Remark}}
-{{end}}}
+{{- range $j, $item := .Fields}}
+	{{$item.Name}}	   {{$item.Type}}	{{$item.FormatFields}}		{{$item.Remark}}
+{{- end}}
+{{- if ge $isTree 2}}
+	Children   {{.StructTableName}}List         // 子节点
+	Selected   bool                             // 是否处于选中状态
+{{- end}}
+}
 
 {{.TableComment}} Null Entity
 type {{.NullStructTableName}} struct {
@@ -22,7 +37,9 @@ func (row *{{.NullStructTableName}}) To{{.StructTableName}}() *{{.StructTableNam
 	{{- else if eq $row.Type "int"}}
 		{{$row.Name}}:	row.{{$row.Name}}.Int,	{{$row.Remark}}
 	{{- else if eq $row.Type "time.Time"}}
-		{{$row.Name}}:	row.{{$row.Name}}.Time,	{{$row.Remark}}
+		{{$row.Name}}:	Time(row.{{$row.Name}}.Time),	{{$row.Remark}}
+	{{- else if eq $row.Type "Time"}}
+		{{$row.Name}}:	Time(row.{{$row.Name}}.Time),	{{$row.Remark}}
 	{{- else}}
 		{{$row.Name}}:	row.{{$row.Name}}.String,	{{$row.Remark}}
 	{{- end}}
@@ -206,3 +223,77 @@ func (m *{{.StructTableName}}Model) Find(where *{{.StructTableName}}) (resList [
 	err = m.DB.Error
 	return
 }
+{{- /* 生成树结构的一些函数 */}}
+{{ if ge $isTree 2}}
+func (m *{{.StructTableName}}Model) GetTree(where *{{.StructTableName}}, sort bool, checked... string) (*{{.StructTableName}}, error) {
+	var resList {{.StructTableName}}List
+	m.DB.Error = nil
+	m.DB.Where(where).Find(&resList)
+	return resList.ToTree(sort, checked...), m.DB.Error
+}
+
+type {{.StructTableName}}List []*{{.StructTableName}}
+
+// 实现sort.Interface接口取元素数量方法
+func (list {{.StructTableName}}List) Len() int {
+	return len(list)
+}
+// 实现sort.Interface接口比较元素方法
+func (list {{.StructTableName}}List) Less(i, j int) bool {
+	if list[i].Sort == list[j].Sort {
+		return list[i].Id < list[j].Id // 按ID升序
+	}else{
+		return list[i].Sort < list[j].Sort
+	}
+}
+// 实现sort.Interface接口交换元素方法
+func (list {{.StructTableName}}List) Swap(i, j int) {
+	list[i], list[j] = list[j], list[i]
+}
+//深度排序
+func (list {{.StructTableName}}List) DeepSort(){
+	sort.Sort(list)
+	for _, row := range list {
+		if row.Children!=nil {
+			row.Children.DeepSort()		//递归
+		}
+	}
+}
+func (list {{.StructTableName}}List) ToMap() map[string]*{{.StructTableName}} {
+	map1 := make(map[string]*{{.StructTableName}})
+	for index, row := range list {
+		map1[row.Id] = list[index]
+	}
+	return map1
+}
+
+func (list {{.StructTableName}}List) ToTree(sort bool, checked... string) *{{.StructTableName}} {
+	root:=&{{.StructTableName}}{}
+	var parent *{{.StructTableName}}
+	var exists bool
+	var c string
+	map1 := list.ToMap()
+	for k, v := range map1 {
+		for _, c = range checked {
+			if c==k {
+				v.Selected=true
+				break
+			}
+		}
+		if v.ParentId=="" {
+			root.AddChild(map1[k])
+		}else{
+			parent, exists = map1[v.ParentId]
+			if exists {
+				parent.AddChild(map1[k])
+			}else{
+				root.AddChild(map1[k])
+			}
+		}
+	}
+	if sort && root.Children!=nil {
+		root.Children.DeepSort()
+	}
+	return root
+}
+{{ end }}
