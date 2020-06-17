@@ -127,6 +127,9 @@ func (m *{{.StructTableName}}Model) GetRow(sqlText string, params ...interface{}
 // 更新数据
 func (m *{{.StructTableName}}Model) Save(sqlTxt string, value ...interface{}) (affectCount int64, err error) {
 	stmt, err := m.DB.DB().Prepare(sqlTxt)
+	if err!=nil {
+		return
+	}
 	defer func() {
 		if err:=stmt.Close(); err!=nil {
 			fmt.Printf("释放数据库连接失败。%v\r\n", err)
