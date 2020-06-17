@@ -37,9 +37,9 @@ func (row *{{.NullStructTableName}}) To{{.StructTableName}}() *{{.StructTableNam
 	{{- else if eq $row.Type "int"}}
 		{{$row.Name}}:	row.{{$row.Name}}.Int,	{{$row.Remark}}
 	{{- else if eq $row.Type "time.Time"}}
-		{{$row.Name}}:	Time(row.{{$row.Name}}.Time),	{{$row.Remark}}
-	{{- else if eq $row.Type "Time"}}
-		{{$row.Name}}:	Time(row.{{$row.Name}}.Time),	{{$row.Remark}}
+		{{$row.Name}}:	ToTime(row.{{$row.Name}}),	{{$row.Remark}}
+	{{- else if eq $row.Type "*Time"}}
+		{{$row.Name}}:	ToTime(row.{{$row.Name}}),	{{$row.Remark}}
 	{{- else}}
 		{{$row.Name}}:	row.{{$row.Name}}.String,	{{$row.Remark}}
 	{{- end}}
@@ -49,6 +49,21 @@ func (row *{{.NullStructTableName}}) To{{.StructTableName}}() *{{.StructTableNam
 
 type {{.StructTableName}}Model struct {
 	DB *gorm.DB
+}
+
+var default{{.StructTableName}}	*{{.StructTableName}}Model
+var mutex{{.StructTableName}} sync.Mutex
+
+func Get{{.StructTableName}}() *{{.StructTableName}}Model{
+	defer mutex{{.StructTableName}}.Unlock()
+	mutex{{.StructTableName}}.Lock()
+	if default{{.StructTableName}}==nil {
+		var err error
+		if default{{.StructTableName}}, err = New{{.StructTableName}}(); err!=nil {
+			panic(fmt.Sprintf("无法连接数据库。%v", err))
+		}
+	}
+	return default{{.StructTableName}}
 }
 
 func New{{.StructTableName}}(db ...*gorm.DB) (*{{.StructTableName}}Model, error) {
@@ -67,12 +82,12 @@ func New{{.StructTableName}}(db ...*gorm.DB) (*{{.StructTableName}}Model, error)
 }
 
 // 获取所有的表字段
-func (m *{{.StructTableName}}Model) getColumns() string {
+func (m *{{.StructTableName}}Model) GetColumns() string {
 	return " {{.AllFieldList}} "
 }
 
 // 获取多行数据.
-func (m *{{.StructTableName}}Model) getRows(sqlTxt string, params ...interface{}) (rowsResult []*{{.StructTableName}}, err error) {
+func (m *{{.StructTableName}}Model) GetRows(sqlTxt string, params ...interface{}) (rowsResult []*{{.StructTableName}}, err error) {
 	query, err := m.DB.DB().Query(sqlTxt, params...)
 	if err != nil {
 		return
@@ -97,22 +112,20 @@ func (m *{{.StructTableName}}Model) getRows(sqlTxt string, params ...interface{}
 }
 
 // 获取单行数据
-func (m *{{.StructTableName}}Model) getRow(sqlText string, params ...interface{}) (rowResult *{{.StructTableName}}, err error) {
+func (m *{{.StructTableName}}Model) GetRow(sqlText string, params ...interface{}) (rowResult *{{.StructTableName}}, err error) {
 	query := m.DB.DB().QueryRow(sqlText, params...)
 	row := {{.NullStructTableName}}{}
 	err = query.Scan(
 	{{range .NullFieldsInfo}}&row.{{.HumpName}},// {{.Comment}}
 	{{end}})
-	if err != sql.ErrNoRows {
-		fmt.Printf("查询失败。%v\r\n", err)
-		return
+	if err==nil {
+		rowResult = row.To{{.StructTableName}}()
 	}
-	rowResult = row.To{{.StructTableName}}()
 	return
 }
 
-// _更新数据
-func (m *{{.StructTableName}}Model) Save(sqlTxt string, value ...interface{}) (b bool, err error) {
+// 更新数据
+func (m *{{.StructTableName}}Model) Save(sqlTxt string, value ...interface{}) (affectCount int64, err error) {
 	stmt, err := m.DB.DB().Prepare(sqlTxt)
 	defer func() {
 		if err:=stmt.Close(); err!=nil {
@@ -120,15 +133,9 @@ func (m *{{.StructTableName}}Model) Save(sqlTxt string, value ...interface{}) (b
 		}
 	}()
 	result, err := stmt.Exec(value...)
-	if err != nil {
-		return
+	if err == nil {
+		affectCount, err = result.RowsAffected()
 	}
-	var affectCount int64
-	affectCount, err = result.RowsAffected()
-	if err != nil {
-		return
-	}
-	b = affectCount > 0
 	return
 }
 
@@ -145,8 +152,14 @@ func (m *{{.StructTableName}}Model) Create(value *{{.StructTableName}}) error {
 		}
 	}()
 	_, err = stmt.Exec(
-	{{range .InsertInfo}}value.{{.HumpName}},// {{.Comment}}
-	{{end}})
+	{{- range .InsertInfo}}
+		{{- if eq .GoType "Time" }}
+			time.Time(value.{{.HumpName}}),    // {{.Comment}}
+		{{- else }}
+			value.{{.HumpName}},    // {{.Comment}}
+		{{- end }}
+	{{- end}}
+	)
 	if err != nil {
 		return err
 	}
@@ -154,7 +167,7 @@ func (m *{{.StructTableName}}Model) Create(value *{{.StructTableName}}) error {
 }
 
 // 更新数据
-func (m *{{.StructTableName}}Model) Update(value *{{.StructTableName}}) (b bool, err error) {
+func (m *{{.StructTableName}}Model) Update(value *{{.StructTableName}}) (affectCount int64, err error) {
 	sqlText := "UPDATE " + Table{{.StructTableName}} + " SET {{.UpdateFieldList}} WHERE {{.PrimaryKey}} = ?"
 	params := make([]interface{}, 0)
 	{{range $i, $val := .UpdateListField}}params = append(params, {{$val}})
@@ -164,15 +177,15 @@ func (m *{{.StructTableName}}Model) Update(value *{{.StructTableName}}) (b bool,
 
 // 查询多行数据
 func (m *{{.StructTableName}}Model) All() (resList []*{{.StructTableName}}, err error) {
-	sqlText := "SELECT" + m.getColumns() + "FROM " + Table{{.StructTableName}}
-	resList, err = m.getRows(sqlText)
+	sqlText := "SELECT" + m.GetColumns() + "FROM " + Table{{.StructTableName}}
+	resList, err = m.GetRows(sqlText)
 	return
 }
 
 // 获取单行数据
 func (m *{{.StructTableName}}Model) First() (result *{{.StructTableName}}, err error) {
-	sqlText := "SELECT" + m.getColumns() + "FROM " + Table{{.StructTableName}} + " LIMIT 1"
-	result, err = m.getRow(sqlText)
+	sqlText := "SELECT" + m.GetColumns() + "FROM " + Table{{.StructTableName}} + " LIMIT 1"
+	result, err = m.GetRow(sqlText)
 	if err != nil {
 		return
 	}
@@ -181,8 +194,8 @@ func (m *{{.StructTableName}}Model) First() (result *{{.StructTableName}}, err e
 
 // 获取最后一行数据
 func (m *{{.StructTableName}}Model) Last() (result *{{.StructTableName}}, err error) {
-	sqlText := "SELECT" + m.getColumns() + "FROM " + Table{{.StructTableName}} + " ORDER BY ID DESC LIMIT 1"
-	result, err = m.getRow(sqlText)
+	sqlText := "SELECT" + m.GetColumns() + "FROM " + Table{{.StructTableName}} + " ORDER BY ID DESC LIMIT 1"
+	result, err = m.GetRow(sqlText)
 	if err != nil {
 		return
 	}
@@ -201,7 +214,7 @@ func (m *{{.StructTableName}}Model) Count() (count int64, err error) {
 }
 
 // 判断是否存在
-func (m *{{.StructTableName}}Model) Exists(id int64) (b bool, err error) {
+func (m *{{.StructTableName}}Model) Exists(id {{.PrimaryType}}) (b bool, err error) {
 	sqlText := "SELECT COUNT(*) FROM " + Table{{.StructTableName}} + " where id = ?"
 	query := m.DB.DB().QueryRow(sqlText, id)
 	var count int64
@@ -217,14 +230,36 @@ func (m *{{.StructTableName}}Model) Exists(id int64) (b bool, err error) {
 }
 
 // 按指定的条件查询列表
-func (m *{{.StructTableName}}Model) Find(where *{{.StructTableName}}) (resList []*{{.StructTableName}}, err error) {
-	m.DB.Error=nil
-	m.DB.Where(where).Find(&resList).Order("{{.PrimaryKey}} desc")
-	err = m.DB.Error
+func (m *{{.StructTableName}}Model) Find(where interface{}, args ...interface{}) (resList []*{{.StructTableName}}, err error) {
+	err = m.DB.Where(where, args).Order("id desc").Find(&resList).Error
 	return
 }
-{{- /* 生成树结构的一些函数 */}}
+
+// 按指定的查询条件删除数据
+func (m *{{.StructTableName}}Model) Delete(where interface{}, args ...interface{}) (int64,error) {
+	db:=m.DB.Where(where, args).Delete({{.StructTableName}}{})
+	return db.RowsAffected, db.Error
+}
+
+// 删除指定主键值的数据
+func (m *{{.StructTableName}}Model) DeleteById(ids ...interface{}) (int64,error) {
+	var db *gorm.DB
+	if len(ids)==0 {
+		return 0, nil
+	}else if len(ids)==1 {
+		db=m.DB.Table(Table{{.StructTableName}}).Where("id=?", ids[0]).Delete({{.StructTableName}}{})
+	}else{
+		db=m.DB.Table(Table{{.StructTableName}}).Where("id IN (?)", ids).Delete({{.StructTableName}}{})
+	}
+	return db.RowsAffected, db.Error
+}
+
+{{- /* 为树结构生成一些函数 */}}
 {{ if ge $isTree 2}}
+func (row *{{.StructTableName}}) AddChild(child *{{.StructTableName}}) {
+	row.Children = append(row.Children, child)
+}
+
 func (m *{{.StructTableName}}Model) GetTree(where *{{.StructTableName}}, sort bool, checked... string) (*{{.StructTableName}}, error) {
 	var resList {{.StructTableName}}List
 	m.DB.Error = nil

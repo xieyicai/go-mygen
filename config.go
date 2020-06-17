@@ -25,6 +25,7 @@ const (
 	TPL_INIT      = "assets/tpl/init.tpl"      //init模板
 	TPL_MARKDOWN  = "assets/tpl/markdown.tpl"  //markdown模板
 	TPL_EXAMPLE   = "assets/tpl/example.tpl"   //example模板
+	TPL_TEST      = "assets/tpl/test1.tpl"     //test模板
 )
 
 const (
@@ -79,8 +80,8 @@ var MysqlTypeToGoType = map[string]string{
 	"date":       "string",
 	"time":       "string",
 	"year":       "string",
-	"datetime":   "Time",
-	"timestamp":  "Time",
+	"datetime":   "*Time",
+	"timestamp":  "*Time",
 	"char":       "string",
 	"varchar":    "string",
 	"tinyblob":   "string",

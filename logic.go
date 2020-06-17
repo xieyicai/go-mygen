@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/Masterminds/sprig"
-	"html/template"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 )
 
@@ -182,7 +184,7 @@ package mysql
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("structure").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("structure").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -243,7 +245,7 @@ import (
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("entity").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("entity").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -272,22 +274,26 @@ func (l *Logic) GenerateCURDFile(req *EntityReq) (err error) {
 		updateListField = make([]string, 0)
 		PrimaryKey      = ""
 		primaryType     = ""
+		fieldName       = ""
 	)
-
 	for _, item := range req.TableDesc {
+		fieldName = l.T.Capitalize(item.ColumnName)
 		allFields = append(allFields, "`"+item.ColumnName+"`")
-		if item.PrimaryKey == false && item.ColumnName != "updated_at" && item.ColumnName != "created_at" {
-			insertFields = append(insertFields, item.ColumnName)
-			InsertInfo = append(InsertInfo, &SqlFieldInfo{
-				HumpName: l.T.Capitalize(item.ColumnName),
-				Comment:  item.ColumnComment,
-			})
+		if !(item.PrimaryKey && item.GolangType == "int64") { // 只要不是整形主键
+			if item.ColumnName != "updated_at" && item.ColumnName != "created_at" {
+				insertFields = append(insertFields, item.ColumnName)
+				InsertInfo = append(InsertInfo, &SqlFieldInfo{
+					GoType:   item.GolangType,
+					HumpName: fieldName,
+					Comment:  item.ColumnComment,
+				})
+			}
 			if item.ColumnName == "identify" {
 				updateList = append(updateList, item.ColumnName+"="+item.ColumnName+"+1")
-			} else {
+			} else if !item.PrimaryKey {
 				updateList = append(updateList, item.ColumnName+"=?")
 				if item.PrimaryKey == false {
-					updateListField = append(updateListField, "value."+l.T.Capitalize(item.ColumnName))
+					updateListField = append(updateListField, "value."+fieldName)
 				}
 			}
 		}
@@ -296,11 +302,12 @@ func (l *Logic) GenerateCURDFile(req *EntityReq) (err error) {
 			primaryType = item.GolangType
 		}
 		fieldsList = append(fieldsList, &SqlFieldInfo{
-			HumpName: l.T.Capitalize(item.ColumnName),
+			GoType:   item.GolangType,
+			HumpName: fieldName,
 			Comment:  item.ColumnComment,
 		})
 		nullFieldList = append(nullFieldList, &NullSqlFieldInfo{
-			HumpName:     l.T.Capitalize(item.ColumnName),
+			HumpName:     fieldName,
 			OriFieldType: item.OriMysqlType,
 			GoType:       MysqlTypeToGoType[item.OriMysqlType],
 			Comment:      item.ColumnComment,
@@ -336,12 +343,15 @@ func (l *Logic) GenerateCURDFile(req *EntityReq) (err error) {
 		Fields:              req.GetFields(l.T),
 	}
 	err = l.GenerateSQL(sqlInfo, req.TableComment)
-	// 添加一个实例
-	l.Once.Do(func() {
-		l.GenerateExample(sqlInfo.StructTableName)
-	})
-	if err != nil {
-		return
+	if err == nil {
+		if err = l.GenerateTest(sqlInfo); err != nil {
+			return
+		} else {
+			// 添加一个实例
+			l.Once.Do(func() {
+				l.GenerateExample(sqlInfo.StructTableName)
+			})
+		}
 	}
 	return
 }
@@ -356,7 +366,7 @@ func (l *Logic) GenerateExample(name string) {
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("example").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("example").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -387,7 +397,9 @@ func (l *Logic) GenerateTableList(list []*TableList) (err error) {
 	// 判断package是否加载过
 	checkStr := "package " + PkgTable
 	if l.T.CheckFileContainsChar(file, checkStr) == false {
-		l.T.WriteFile(file, checkStr+"\n")
+		if _, err = l.T.WriteFile(file, checkStr+"\n"); err != nil {
+			return err
+		}
 	}
 	checkStr = "const"
 	if l.T.CheckFileContainsChar(file, checkStr) {
@@ -398,7 +410,7 @@ func (l *Logic) GenerateTableList(list []*TableList) (err error) {
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("table_list").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("table_list").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -422,7 +434,9 @@ func (l *Logic) GenerateInit() (err error) {
 	// 判断package是否加载过
 	checkStr := "package " + PkgDbModels
 	if l.T.CheckFileContainsChar(file, checkStr) == false {
-		l.T.WriteFile(file, checkStr+"\n")
+		if _, err = l.T.WriteFile(file, checkStr+"\n"); err != nil {
+			return
+		}
 	}
 	checkStr = "DBConfig"
 	if l.T.CheckFileContainsChar(file, checkStr) {
@@ -433,7 +447,7 @@ func (l *Logic) GenerateInit() (err error) {
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("init").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("init").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -460,12 +474,19 @@ package %s
 
 import(
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+	"sort"
+	"sync"
 )
 `, tableComment, PkgDbModels)
 	// 判断package是否加载过
 	if l.T.CheckFileContainsChar(goFile, "database/sql") == false {
-		l.T.WriteFile(goFile, s)
+		_, err = l.T.WriteFile(goFile, s)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 解析模板
@@ -473,7 +494,7 @@ import(
 	if err != nil {
 		return
 	}
-	tpl, err := template.New("CURD").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("CURD").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
 	if err != nil {
 		return
 	}
@@ -505,7 +526,10 @@ func (l *Logic) GenerateMarkdown(data *MarkDownData) (err error) {
 	}
 	// 解析
 	content := bytes.NewBuffer([]byte{})
-	tpl, err := template.New("markdown").Funcs(sprig.FuncMap()).Parse(string(tplByte))
+	tpl, err := template.New("markdown").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
+	if err != nil {
+		return
+	}
 	err = tpl.Execute(content, data)
 	if err != nil {
 		return
@@ -532,4 +556,33 @@ func (req *EntityReq) GetFields(tool *Tools) []*FieldsInfo {
 		})
 	}
 	return fields
+}
+
+// 生成测试文件
+func (l *Logic) GenerateTest(info *SqlInfo) error {
+	// 解析模板
+	tplByte, err := Asset(TPL_TEST)
+	if err != nil {
+		return err
+	}
+	tpl, err := template.New("CURD").Funcs(sprig.TxtFuncMap()).Parse(string(tplByte))
+	if err != nil {
+		return err
+	}
+	// 打开文件
+	if _, err := os.Stat(l.GetMysqlDir()); os.IsNotExist(err) {
+		// 必须分成两步：先创建文件夹、再修改权限
+		err = os.MkdirAll(l.GetMysqlDir(), os.ModePerm) //0777也可以os.ModePerm
+		if err != nil {
+			return err
+		}
+		err = os.Chmod(l.GetMysqlDir(), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	goFile := filepath.Join(l.GetMysqlDir(), info.TableName+"_test.go")
+	ff, err := os.OpenFile(goFile, os.O_CREATE|os.O_WRONLY, 0666)
+	// 渲染模板
+	return tpl.Execute(ff, info)
 }

@@ -126,6 +126,7 @@ type SqlInfo struct {
 
 // 查询使用的字段结构信息
 type SqlFieldInfo struct {
+	GoType   string // golang类型
 	HumpName string // 驼峰字段名称
 	Comment  string // 字段注释
 }
